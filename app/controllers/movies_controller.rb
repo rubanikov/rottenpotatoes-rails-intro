@@ -1,5 +1,9 @@
 class MoviesController < ApplicationController
 
+@@sort_by = nil
+@@checked_ratings_history = ["G", "PG", "PG-13", "R"]
+
+
   def movie_params
     params.require(:movie).permit(:title, :rating, :description, :release_date)
   end
@@ -12,13 +16,25 @@ class MoviesController < ApplicationController
 
   def index
     @movies = Movie.all
+    @all_ratings = Movie.all_ratings
     @@sort_by = params[:sort_by] || session[:sort_by]
+    @checked_ratings = params[:ratings] || session[:ratings]
+
     @movies = @movies.order(@@sort_by)
     if @@sort_by == 'title'
       @title_header = 'hilite'
     elsif @@sort_by == 'release_date'
       @release_date_header = 'hilite'
     end
+
+  if @checked_ratings == nil
+    @checked_ratings = @all_ratings
+    session[:sort_by] = @@sort_by
+  else
+    session[:ratings] = @checked_ratings
+    session[:sort_by] = @@sort_by
+    @movies = Movie.where("rating in (?)", @checked_ratings.keys).order(@@sort_by)
+  end
     
   end
 
